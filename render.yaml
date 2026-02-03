@@ -10,10 +10,18 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: RENDER_DB_URL
+      - key: DB_HOST
         fromDatabase:
           name: alert-system-db
-          property: connectionString
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: alert-system-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: alert-system-db
+          property: databaseName
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: alert-system-db
