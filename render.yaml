@@ -1,0 +1,30 @@
+services:
+  # Backend Service
+  - type: web
+    name: alert-system-backend
+    env: docker
+    context: backend
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    healthCheckPath: /api/auth/test
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: alert-system-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: alert-system-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: alert-system-db
+          property: password
+
+databases:
+  - name: alert-system-db
+    databaseName: alertsystem
+    user: disruptor
+    plan: free

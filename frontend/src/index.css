@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', sans-serif;
+}
+
+body {
+  @apply bg-background text-slate-200 font-sans antialiased overflow-x-hidden;
+  background-color: #020617 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Glass Utilities */
+.glass-panel {
+  @apply backdrop-blur-md bg-surface/70 border border-white/10 shadow-xl;
+}
+
+.glass-card {
+  @apply backdrop-blur-sm bg-surface/40 border border-white/5 shadow-lg hover:bg-surface/60 transition duration-300;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
