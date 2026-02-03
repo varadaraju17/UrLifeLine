@@ -3,7 +3,7 @@ services:
   - type: web
     name: alert-system-backend
     env: docker
-    context: backend
+    dockerContext: backend
     dockerfilePath: backend/Dockerfile
     plan: free
     healthCheckPath: /api/auth/test
