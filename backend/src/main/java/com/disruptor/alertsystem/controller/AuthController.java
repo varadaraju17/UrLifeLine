@@ -46,6 +46,11 @@ public class AuthController {
   @Autowired
   JwtUtils jwtUtils;
 
+  @org.springframework.web.bind.annotation.GetMapping("/test")
+  public ResponseEntity<String> testEndpoint() {
+    return ResponseEntity.ok("Backend is running");
+  }
+
   @PostMapping("/signin")
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
     try {
