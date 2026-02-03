@@ -12,6 +12,7 @@ com\disruptor\alertsystem\service\UserManagementService.class
 com\disruptor\alertsystem\security\WebSecurityConfig.class
 com\disruptor\alertsystem\service\CitizenQueryService.class
 com\disruptor\alertsystem\model\ShelterStatus.class
+com\disruptor\alertsystem\payload\CreateAlertRequest.class
 com\disruptor\alertsystem\controller\ResourceController.class
 com\disruptor\alertsystem\AlertSystemApplication.class
 com\disruptor\alertsystem\model\ERole.class
@@ -21,6 +22,7 @@ com\disruptor\alertsystem\model\Task.class
 com\disruptor\alertsystem\payload\CreateOfficerRequest.class
 com\disruptor\alertsystem\repository\ShelterRepository.class
 com\disruptor\alertsystem\repository\ReportRepository.class
+com\disruptor\alertsystem\DataInitializer.class
 com\disruptor\alertsystem\payload\SignupRequest.class
 com\disruptor\alertsystem\repository\TaskRepository.class
 com\disruptor\alertsystem\controller\RootController.class
