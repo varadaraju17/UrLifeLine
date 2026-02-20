@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,26 +6,98 @@
 
 :root {
   --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --pulse-red: #ef4444;
+  --pulse-cyan: #22d3ee;
+  --pulse-orange: #fb923c;
 }
 
 body {
   @apply bg-background text-slate-200 font-sans antialiased overflow-x-hidden;
   background-color: #020617 !important;
   color: #e2e8f0 !important;
+  position: relative;
 }
 
-/* Glass Utilities */
-.glass-panel {
-  @apply backdrop-blur-md bg-surface/70 border border-white/10 shadow-xl;
+/* ECG Background Pattern */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg width='200' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 L 20 50 L 25 30 L 30 60 L 35 45 L 40 50 L 200 50' stroke='%2322d3ee' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  animation: ecgScroll 8s linear infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.glass-card {
-  @apply backdrop-blur-sm bg-surface/40 border border-white/5 shadow-lg hover:bg-surface/60 transition duration-300;
+/* Lifeline Pulse Theme Components */
+@layer components {
+
+  /* Glass Morphism - Medical Monitor Style */
+  .glass-lifeline {
+    @apply backdrop-blur-xl bg-slate-900/40 border border-white/10 shadow-2xl;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.3) 100%);
+  }
+
+  .glass-panel {
+    @apply backdrop-blur-md bg-surface/70 border border-white/10 shadow-xl;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-sm bg-surface/40 border border-white/5 shadow-lg hover:bg-surface/60 transition-all duration-300;
+  }
+
+  /* Emergency Stat Card */
+  .stat-card {
+    @apply glass-lifeline rounded-2xl p-6 transition-all duration-300 hover:border-primary-500/30 hover:shadow-glow-md;
+  }
+
+  /* Heartbeat Pulse Button */
+  .pulse-heart {
+    animation: heartbeat 1.5s ease-in-out infinite;
+  }
+
+  .pulse-heart:hover {
+    animation: heartbeat 0.8s ease-in-out infinite;
+  }
+
+  /* Action Buttons - Emergency Theme */
+  .btn-emergency {
+    @apply px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg shadow-primary-900/50 hover:shadow-glow-md hover:scale-105 transition-all duration-300;
+  }
+
+  .btn-rescue {
+    @apply px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-accent-500 to-accent-600 shadow-lg shadow-accent-900/50 hover:shadow-lg hover:scale-105 transition-all duration-300;
+  }
+
+  .btn-medical {
+    @apply px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-secondary-500 to-secondary-600 shadow-lg shadow-secondary-900/50 hover:scale-105 transition-all duration-300;
+  }
+
+  /* Alert Badges */
+  .badge-critical {
+    @apply px-3 py-1 rounded-full text-xs font-bold bg-danger-500/20 text-danger-400 border border-danger-500/30 animate-pulse-fast;
+  }
+
+  .badge-active {
+    @apply px-3 py-1 rounded-full text-xs font-bold bg-success-500/20 text-success-400 border border-success-500/30;
+  }
+
+  .badge-pending {
+    @apply px-3 py-1 rounded-full text-xs font-bold bg-warning-500/20 text-warning-400 border border-warning-500/30;
+  }
 }
 
-/* Scrollbar */
+/* Scrollbar - Emergency Theme */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -33,10 +105,65 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: linear-gradient(180deg, #ff5249 0%, #ef4444 100%);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* ECG Line Animation */
+@keyframes ecgPulse {
+
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  10% {
+    transform: scaleY(1.5);
+  }
+
+  20% {
+    transform: scaleY(0.5);
+  }
+
+  30% {
+    transform: scaleY(1.2);
+  }
+
+  40%,
+  90% {
+    transform: scaleY(1);
+  }
+}
+
+/* Emergency Glow Effect */
+.emergency-glow {
+  position: relative;
+}
+
+.emergency-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--pulse-red), var(--pulse-orange));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Utility Animations */
+.fade-in-up {
+  animation: slideUp 0.6s ease-out;
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
 }

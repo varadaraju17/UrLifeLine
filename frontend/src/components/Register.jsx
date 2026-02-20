@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, Flag, MapPin, Phone, Building, UserPlus, ArrowLeft, ArrowRight, Shield } from 'lucide-react';
+import { User, Mail, Lock, Flag, MapPin, Phone, Building, UserPlus, ArrowLeft, ArrowRight, Shield, Heart } from 'lucide-react';
 import DropdownSelect from './UI/DropdownSelect';
 import AuthService from '../services/auth.service';
 import { motion } from 'framer-motion';
@@ -18,7 +18,10 @@ const Register = () => {
         phone: '',
         state: '',
         district: '',
-        location: ''
+        location: '',
+        isVolunteer: false,
+        volunteerSkills: '',
+        volunteerAvailability: ''
     });
 
     const handleRegister = async (e) => {
@@ -34,7 +37,10 @@ const Register = () => {
                 formData.phone,
                 formData.state,
                 formData.district,
-                formData.location
+                formData.location,
+                formData.isVolunteer,
+                formData.volunteerSkills,
+                formData.volunteerAvailability
             );
             navigate('/login');
         } catch (err) {
@@ -225,6 +231,59 @@ const Register = () => {
                                     placeholder="Enter your complete address"
                                 />
                             </div>
+                        </div>
+
+                        {/* Volunteer Section */}
+                        <div className="border-t border-white/10 pt-6">
+                            <div className="flex items-start gap-3 mb-4">
+                                <input
+                                    type="checkbox"
+                                    id="isVolunteer"
+                                    checked={formData.isVolunteer}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, isVolunteer: e.target.checked }))}
+                                    className="mt-1 w-5 h-5 rounded border-white/20 bg-slate-800/50 text-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:ring-offset-0 cursor-pointer"
+                                />
+                                <label htmlFor="isVolunteer" className="flex-1 cursor-pointer">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Heart className="w-5 h-5 text-purple-400" />
+                                        <span className="text-white font-semibold">I want to volunteer during disasters</span>
+                                    </div>
+                                    <p className="text-sm text-slate-400">
+                                        Help your community by volunteering for rescue and relief operations
+                                    </p>
+                                </label>
+                            </div>
+
+                            {formData.isVolunteer && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 p-6 bg-purple-500/5 border border-purple-500/20 rounded-xl">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Your Skills
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="volunteerSkills"
+                                            value={formData.volunteerSkills}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3.5 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all duration-300"
+                                            placeholder="e.g., Medical, First Aid, Driving, Search & Rescue"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Your Availability
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="volunteerAvailability"
+                                            value={formData.volunteerAvailability}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3.5 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all duration-300"
+                                            placeholder="e.g., Weekends, Evenings, Anytime"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Submit Button */}

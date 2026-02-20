@@ -53,6 +53,7 @@ public class AuthController {
 
   @PostMapping("/signin")
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    System.out.println("Login info: Processing login request for " + loginRequest.getEmail());
     try {
       Authentication authentication = authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
@@ -69,12 +70,17 @@ public class AuthController {
           userDetails.getId(),
           userDetails.getName(),
           userDetails.getEmail(),
+          userDetails.getDistrict(),
           roles));
     } catch (BadCredentialsException e) {
+      System.out.println("Authentication failed: Bad Credentials");
+      e.printStackTrace();
       return ResponseEntity
           .status(HttpStatus.UNAUTHORIZED)
           .body(new MessageResponse("Error: Invalid email or password!"));
     } catch (Exception e) {
+      System.out.println("Authentication failed: General Error");
+      e.printStackTrace();
       return ResponseEntity
           .status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new MessageResponse("Error: Authentication failed. Please try again."));
@@ -103,6 +109,13 @@ public class AuthController {
 
       user.setState(signUpRequest.getState());
       user.setDistrict(signUpRequest.getDistrict());
+
+      // Handle volunteer registration
+      if (signUpRequest.getIsVolunteer() != null && signUpRequest.getIsVolunteer()) {
+        user.setIsVolunteer(true);
+        user.setVolunteerSkills(signUpRequest.getVolunteerSkills());
+        user.setVolunteerAvailability(signUpRequest.getVolunteerAvailability());
+      }
 
       userRepository.save(user);
 

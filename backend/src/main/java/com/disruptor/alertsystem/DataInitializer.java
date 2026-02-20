@@ -22,14 +22,13 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         if (!userRepository.existsByEmail("varadarajuny@gmail.com")) {
             User admin = new User(
-                "Administrator",
-                "varadarajuny@gmail.com",
-                encoder.encode("Varada883@"),
-                ERole.ROLE_ADMIN,
-                "admin-phone",
-                "Central",
-                "HQ"
-            );
+                    "Administrator",
+                    "varadarajuny@gmail.com",
+                    encoder.encode("Varada883@"),
+                    ERole.ROLE_ADMIN,
+                    "admin-phone",
+                    "Delhi",
+                    "New Delhi");
             userRepository.save(admin);
             System.out.println("Admin user seeded successfully.");
         }

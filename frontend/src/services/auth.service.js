@@ -77,7 +77,7 @@ axios.interceptors.response.use(
     }
 );
 
-const register = (name, email, password, role, phone, state, district, location) => {
+const register = (name, email, password, role, phone, state, district, location, isVolunteer, volunteerSkills, volunteerAvailability) => {
     return axios.post(API_URL + "signup", {
         name,
         email,
@@ -86,7 +86,10 @@ const register = (name, email, password, role, phone, state, district, location)
         phone,
         state,
         district,
-        location
+        location,
+        isVolunteer,
+        volunteerSkills,
+        volunteerAvailability
     }, {
         headers: {
             'Content-Type': 'application/json'

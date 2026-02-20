@@ -9,6 +9,8 @@ import lombok.Getter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class UserDetailsImpl implements UserDetails {
   private static final long serialVersionUID = 1L;
@@ -27,12 +29,16 @@ public class UserDetailsImpl implements UserDetails {
 
   private Collection<? extends GrantedAuthority> authorities;
 
-  public UserDetailsImpl(Long id, String name, String email, String password,
+  @Getter
+  private String district;
+
+  public UserDetailsImpl(Long id, String name, String email, String password, String district,
       Collection<? extends GrantedAuthority> authorities) {
     this.id = id;
     this.name = name;
     this.email = email;
     this.password = password;
+    this.district = district;
     this.authorities = authorities;
   }
 
@@ -40,10 +46,11 @@ public class UserDetailsImpl implements UserDetails {
     List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getRole().name()));
 
     return new UserDetailsImpl(
-        user.getId(), 
-        user.getName(), 
+        user.getId(),
+        user.getName(),
         user.getEmail(),
-        user.getPassword(), 
+        user.getPassword(),
+        user.getDistrict(),
         authorities);
   }
 

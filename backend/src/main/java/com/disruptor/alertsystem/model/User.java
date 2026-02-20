@@ -10,10 +10,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users", 
-       uniqueConstraints = { 
-           @UniqueConstraint(columnNames = "email") 
-       })
+@Table(name = "users", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "email")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,34 +33,43 @@ public class User {
   @NotBlank
   @Size(max = 120)
   private String password;
-  
+
   @Enumerated(EnumType.STRING)
   private ERole role;
-  
+
   private String phone;
-  
+
   private String region;
-  
+
   private String location;
-  
+
   private String state;
-  
+
   private String district;
-  
+
   // For officers assigned to admin, this stores the admin's user ID
   @ManyToOne
   @JoinColumn(name = "assigned_admin_id")
   private User assignedAdmin;
-  
+
   // For officers to show their status
   @Enumerated(EnumType.STRING)
   private OfficerStatus status;
-  
+
   private LocalDateTime createdAt;
-  
+
   private LocalDateTime updatedAt;
-  
+
   private Boolean isActive = true;
+
+  // Volunteer fields
+  private Boolean isVolunteer = false;
+
+  @Column(length = 500)
+  private String volunteerSkills; // e.g., "Medical, First Aid, Search & Rescue"
+
+  @Column(length = 200)
+  private String volunteerAvailability; // e.g., "Weekends, Evenings, Anytime"
 
   public User(String name, String email, String password, ERole role, String phone, String region, String location) {
     this.name = name;
@@ -75,16 +83,15 @@ public class User {
     this.updatedAt = LocalDateTime.now();
     this.isActive = true;
   }
-  
+
   @PrePersist
   public void prePersist() {
     createdAt = LocalDateTime.now();
     updatedAt = LocalDateTime.now();
   }
-  
+
   @PreUpdate
   public void preUpdate() {
     updatedAt = LocalDateTime.now();
   }
 }
-

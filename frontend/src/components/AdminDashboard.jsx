@@ -20,7 +20,9 @@ import {
   AlertTriangle,
   LogOut,
   Shield,
-  X
+  X,
+  Ambulance,
+  LifeBuoy
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -31,6 +33,7 @@ const AdminDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [stats, setStats] = useState({ volunteers: 0, teams: 0, requests: 0 });
 
   // Forms State
   const [showOfficerForm, setShowOfficerForm] = useState(false);
@@ -63,14 +66,22 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${currentUser.token}` };
-      const [officersRes, tasksRes, areasRes] = await Promise.all([
+      const [officersRes, tasksRes, areasRes, volunteersRes, teamsRes, requestsRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/officers`, { headers }).catch(() => ({ data: [] })),
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/tasks/all`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/affected-areas/all`, { headers }).catch(() => ({ data: [] }))
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/affected-areas/all`, { headers }).catch(() => ({ data: [] })),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/volunteers/all/count`, { headers }).catch(() => ({ data: 0 })),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/emergency-teams/all/count`, { headers }).catch(() => ({ data: 0 })),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/rescue-requests/all/count`, { headers }).catch(() => ({ data: 0 }))
       ]);
       setOfficers(officersRes.data || []);
       setTasks(tasksRes.data || []);
       setAffectedAreas(areasRes.data || []);
+      setStats({
+        volunteers: volunteersRes.data || 0,
+        teams: teamsRes.data || 0,
+        requests: requestsRes.data || 0
+      });
     } catch (error) {
       console.error('Data fetch error:', error);
       showNotify('Failed to load dashboard data', 'error');
@@ -170,14 +181,14 @@ const AdminDashboard = () => {
         {/* Sidebar Header */}
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-900/50">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-cyan-glow animate-heartbeat">
               <Shield size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-blue-100 to-slate-300 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-secondary-100 to-slate-300 bg-clip-text text-transparent">
                 UrLifeLine
               </h1>
-              <p className="text-[10px] text-slate-500 font-semibold tracking-widest uppercase">Admin Dashboard</p>
+              <p className="text-[10px] text-accent-400 font-semibold tracking-widest uppercase font-mono">Command Center</p>
             </div>
           </div>
         </div>
@@ -251,9 +262,11 @@ const AdminDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[
                       { title: 'Active Members', value: officers.filter(o => o.status === 'ACTIVE').length, icon: Users, gradient: 'from-blue-600 to-blue-700', shadow: 'shadow-blue-900/50' },
-                      { title: 'Active Tasks', value: tasks.filter(t => t.status !== 'COMPLETED').length, icon: ClipboardList, gradient: 'from-amber-600 to-amber-700', shadow: 'shadow-amber-900/50' },
+                      { title: 'Volunteers', value: stats.volunteers, icon: Users, gradient: 'from-purple-600 to-purple-700', shadow: 'shadow-purple-900/50' },
+                      { title: 'Emergency Teams', value: stats.teams, icon: Ambulance, gradient: 'from-red-600 to-red-700', shadow: 'shadow-red-900/50' },
+                      { title: 'Rescue Requests', value: stats.requests, icon: LifeBuoy, gradient: 'from-amber-600 to-amber-700', shadow: 'shadow-amber-900/50' },
                       { title: 'Danger Areas', value: affectedAreas.length, icon: ShieldAlert, gradient: 'from-red-600 to-red-700', shadow: 'shadow-red-900/50' },
-                      { title: 'System Status', value: 'OPTIMAL', icon: Activity, gradient: 'from-emerald-600 to-emerald-700', shadow: 'shadow-emerald-900/50' }
+                      { title: 'Active Tasks', value: tasks.filter(t => t.status !== 'COMPLETED').length, icon: ClipboardList, gradient: 'from-emerald-600 to-emerald-700', shadow: 'shadow-emerald-900/50' }
                     ].map((stat, i) => (
                       <motion.div
                         key={i}

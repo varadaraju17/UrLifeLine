@@ -5,6 +5,10 @@ import MapComponent from './MapComponent';
 import DropdownSelect from './UI/DropdownSelect';
 import { motion, AnimatePresence } from 'framer-motion';
 import { INDIAN_STATES_AND_DISTRICTS } from '../data/indian_states_districts';
+import EmergencyTeamsTab from './officer/EmergencyTeamsTab';
+import VolunteersTab from './officer/VolunteersTab';
+import RescueOperationsTab from './officer/RescueOperationsTab';
+import alertService from '../services/alertService';
 import {
   ClipboardList,
   Radio,
@@ -17,13 +21,18 @@ import {
   Target,
   Crosshair,
   LogOut,
-  X
+  X,
+  Ambulance,
+  Users,
+  LifeBuoy,
+  Bell
 } from 'lucide-react';
 
 const OfficerDashboard = () => {
   const [activeTab, setActiveTab] = useState('tasks');
   const [tasks, setTasks] = useState([]);
   const [affectedAreas, setAffectedAreas] = useState([]);
+  const [myAlerts, setMyAlerts] = useState([]); // Alert history
   const [loading, setLoading] = useState(true);
 
   // Alert Targeting State
@@ -80,12 +89,14 @@ const OfficerDashboard = () => {
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${currentUser.token}` };
-      const [tasksRes, areasRes] = await Promise.all([
+      const [tasksRes, areasRes, alertsRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/tasks/my-tasks`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/affected-areas/all`, { headers }).catch(() => ({ data: [] }))
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/affected-areas/all`, { headers }).catch(() => ({ data: [] })),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/alerts/my-alerts`, { headers }).catch(() => ({ data: [] }))
       ]);
       setTasks(tasksRes.data || []);
       setAffectedAreas(areasRes.data || []);
+      setMyAlerts(alertsRes.data || []);
     } catch (error) {
       console.error('Error loading officer data', error);
       showNotify('Failed to load operational data', 'error');
@@ -146,6 +157,21 @@ const OfficerDashboard = () => {
     }
   };
 
+  const handleDeleteAlert = async (alertId) => {
+    if (!window.confirm('Are you sure you want to delete this alert?')) {
+      return;
+    }
+
+    try {
+      const headers = { Authorization: `Bearer ${user.token}` };
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/alerts/${alertId}`, { headers });
+      setMyAlerts(myAlerts.filter(alert => alert.id !== alertId));
+      showNotify('Alert deleted successfully');
+    } catch (error) {
+      showNotify('Failed to delete alert', 'error');
+    }
+  };
+
   const handleReportArea = async () => {
     try {
       const headers = { Authorization: `Bearer ${user.token}` };
@@ -174,14 +200,14 @@ const OfficerDashboard = () => {
         {/* Sidebar Header */}
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-900/50">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-glow-md animate-heartbeat">
               <Shield size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-emerald-100 to-slate-300 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-accent-100 to-slate-300 bg-clip-text text-transparent">
                 UrLifeLine
               </h1>
-              <p className="text-[10px] text-slate-500 font-semibold tracking-widest uppercase">Officer Dashboard</p>
+              <p className="text-[10px] text-secondary-400 font-semibold tracking-widest uppercase font-mono">Officer Dashboard</p>
             </div>
           </div>
         </div>
@@ -192,12 +218,15 @@ const OfficerDashboard = () => {
             { id: 'tasks', label: 'My Tasks', icon: Target },
             { id: 'broadcast', label: 'Send Alert', icon: Radio },
             { id: 'map', label: 'Map', icon: MapIcon },
+            { id: 'teams', label: 'Emergency Teams', icon: Ambulance },
+            { id: 'volunteers', label: 'Volunteers', icon: Users },
+            { id: 'rescue', label: 'Rescue Operations', icon: LifeBuoy },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium text-sm transition-all duration-300 ${activeTab === tab.id
-                ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-900/50 scale-[1.02]'
+                ? 'bg-gradient-to-r from-accent-500 to-accent-600 text-white shadow-glow-md'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
             >
@@ -332,7 +361,10 @@ const OfficerDashboard = () => {
                             <div className="mb-4">
                               <DropdownSelect
                                 label="State Population"
-                                options={Object.keys(INDIAN_STATES_AND_DISTRICTS).map(s => ({ value: s, label: s }))}
+                                options={(INDIAN_STATES_AND_DISTRICTS && typeof INDIAN_STATES_AND_DISTRICTS === 'object')
+                                  ? Object.keys(INDIAN_STATES_AND_DISTRICTS).map(s => ({ value: s, label: s }))
+                                  : []
+                                }
                                 value={selectedState}
                                 onChange={(val) => {
                                   setSelectedState(val);
@@ -370,8 +402,8 @@ const OfficerDashboard = () => {
                               <div className="mt-4">
                                 <DropdownSelect
                                   label={`Select District in ${selectedState}`}
-                                  options={INDIAN_STATES_AND_DISTRICTS[selectedState] ?
-                                    INDIAN_STATES_AND_DISTRICTS[selectedState].map(d => ({ value: d, label: d }))
+                                  options={(INDIAN_STATES_AND_DISTRICTS && INDIAN_STATES_AND_DISTRICTS[selectedState])
+                                    ? INDIAN_STATES_AND_DISTRICTS[selectedState].map(d => ({ value: d, label: d }))
                                     : []}
                                   value={selectedDistricts[0] || ''}
                                   onChange={(val) => setSelectedDistricts([val])}
@@ -384,9 +416,14 @@ const OfficerDashboard = () => {
                       </div>
                       <form onSubmit={handleSendAlert} className="space-y-6">
                         <div>
-                          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">
-                            Message Title
-                          </label>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">
+                              Message Title
+                            </label>
+                            <span className="text-xs font-mono text-slate-500 bg-white/5 px-2 py-1 rounded">
+                              {new Date().toLocaleString()}
+                            </span>
+                          </div>
                           <input
                             required
                             value={alertForm.title}
@@ -415,6 +452,73 @@ const OfficerDashboard = () => {
                           SEND ALERT
                         </button>
                       </form>
+
+                      {/* Alert History Section */}
+                      <div className="mt-8 pt-8 border-t border-white/10">
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                          <Radio size={20} className="text-accent-400" />
+                          Sent Alerts History ({myAlerts.length})
+                        </h3>
+
+                        {myAlerts.length === 0 ? (
+                          <div className="text-center py-12 glass-card rounded-xl border border-white/10">
+                            <Bell size={48} className="mx-auto mb-4 text-slate-600" />
+                            <p className="text-slate-400 text-lg font-bold mb-2">No Alerts Sent Yet</p>
+                            <p className="text-slate-500 text-sm">Your sent alerts will appear here</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                            {myAlerts.map(alert => {
+                              const alertDate = new Date(alert.broadcastTime);
+                              return (
+                                <motion.div
+                                  key={alert.id}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="glass-card p-4 rounded-xl border border-white/10 hover:border-accent-400/50 transition-all duration-300"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1">
+                                      <h4 className="font-bold text-white mb-1">{alert.title}</h4>
+                                      <p className="text-sm text-slate-400 mb-2 line-clamp-2">{alert.message}</p>
+                                      <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                                        <span>
+                                          {alertDate.toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric'
+                                          })}
+                                        </span>
+                                        <span>•</span>
+                                        <span>
+                                          {alertDate.toLocaleTimeString('en-IN', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            hour12: true
+                                          })}
+                                        </span>
+                                        {alert.district && (
+                                          <>
+                                            <span>•</span>
+                                            <span className="text-accent-400">{alert.district}</span>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => handleDeleteAlert(alert.id)}
+                                      className="ml-4 p-2 bg-danger-500/20 hover:bg-danger-500/30 border border-danger-500/50 rounded-lg text-danger-300 transition-colors duration-200"
+                                      title="Delete Alert"
+                                    >
+                                      <X size={16} />
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -433,6 +537,18 @@ const OfficerDashboard = () => {
                     </button>
                   </div>
                 </div>
+              )}
+
+              {activeTab === 'teams' && (
+                <EmergencyTeamsTab userDistrict={user?.district} />
+              )}
+
+              {activeTab === 'volunteers' && (
+                <VolunteersTab userDistrict={user?.district} />
+              )}
+
+              {activeTab === 'rescue' && (
+                <RescueOperationsTab userDistrict={user?.district} />
               )}
             </motion.div>
           </AnimatePresence>

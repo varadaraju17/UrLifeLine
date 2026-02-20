@@ -11,11 +11,27 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByEmail(String email);
+
   Boolean existsByEmail(String email);
+
   List<User> findByRole(ERole role);
+
   List<User> findByRegion(String region);
+
   List<User> findByAssignedAdminId(Long adminId);
+
   List<User> findByRoleAndState(ERole role, String state);
+
   List<User> findByRoleAndDistrict(ERole role, String district);
+
   List<User> findByStateAndDistrict(String state, String district);
+
+  // Volunteer queries
+  List<User> findByDistrictIgnoreCaseAndIsVolunteer(String district, Boolean isVolunteer);
+
+  List<User> findByIsVolunteer(Boolean isVolunteer);
+
+  long countByDistrictIgnoreCaseAndIsVolunteer(String district, Boolean isVolunteer);
+
+  long countByIsVolunteer(Boolean isVolunteer);
 }

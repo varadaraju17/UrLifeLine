@@ -16,9 +16,15 @@ import {
   Clock,
   LogOut,
   X,
-  Send
+  Send,
+  MapPin,
+  LifeBuoy,
+  ClipboardList
 } from 'lucide-react';
 import MapComponent from './MapComponent';
+
+import RequestRescue from './citizen/RequestRescue';
+import MyRescueRequests from './citizen/MyRescueRequests';
 
 const CitizenDashboard = () => {
   const [activeTab, setActiveTab] = useState('notifications');
@@ -32,6 +38,11 @@ const CitizenDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [volunteerData, setVolunteerData] = useState({
+    isVolunteer: false,
+    volunteerSkills: '',
+    volunteerAvailability: ''
+  });
 
   // Form State
   const [queryForm, setQueryForm] = useState({
@@ -46,7 +57,10 @@ const CitizenDashboard = () => {
   useEffect(() => {
     const currentUser = AuthService.getCurrentUser();
     setUser(currentUser);
-    if (currentUser) fetchCitizenData(currentUser);
+    if (currentUser) {
+      fetchCitizenData(currentUser);
+      fetchVolunteerProfile(currentUser);
+    }
   }, []);
 
   const fetchCitizenData = async (currentUser) => {
@@ -89,6 +103,28 @@ const CitizenDashboard = () => {
     }
   };
 
+  const fetchVolunteerProfile = async (currentUser) => {
+    try {
+      const headers = { Authorization: `Bearer ${currentUser.token}` };
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/volunteers/me`, { headers });
+      setVolunteerData(response.data);
+    } catch (error) {
+      console.error('Error fetching volunteer profile:', error);
+    }
+  };
+
+  const handleVolunteerUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const headers = { Authorization: `Bearer ${user.token}` };
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/volunteers/me`, volunteerData, { headers });
+      alert('Volunteer profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating volunteer profile:', error);
+      alert('Failed to update volunteer profile');
+    }
+  };
+
   const handleLogout = () => {
     AuthService.logout();
     window.location.href = '/login';
@@ -111,14 +147,14 @@ const CitizenDashboard = () => {
         {/* Sidebar Header */}
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-900/50">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-glow-md animate-heartbeat">
               <Shield size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-purple-100 to-slate-300 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-primary-100 to-slate-300 bg-clip-text text-transparent">
                 UrLifeLine
               </h1>
-              <p className="text-[10px] text-slate-500 font-semibold tracking-widest uppercase">Safety Portal</p>
+              <p className="text-[10px] text-secondary-400 font-semibold tracking-widest uppercase font-mono">Safety Portal</p>
             </div>
           </div>
         </div>
@@ -127,16 +163,18 @@ const CitizenDashboard = () => {
         <div className="flex-1 p-4 space-y-2 overflow-y-auto">
           {[
             { id: 'notifications', label: 'Alerts', icon: Bell, badge: data.alerts.length },
-            { id: 'disasters', label: 'Emergencies', icon: AlertTriangle },
+            { id: 'rescue', label: 'Request Rescue', icon: LifeBuoy },
+            { id: 'my-requests', label: 'My Requests', icon: ClipboardList },
+            { id: 'volunteer', label: 'Volunteer', icon: Shield },
             { id: 'map', label: 'Map', icon: MapIcon },
             { id: 'shelters', label: 'Safe Places', icon: Home },
-            { id: 'queries', label: 'Get Help', icon: HelpCircle },
+            { id: 'help', label: 'Get Help', icon: HelpCircle },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium text-sm transition-all duration-300 relative ${activeTab === tab.id
-                ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-900/50 scale-[1.02]'
+                ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-glow-md'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
             >
@@ -194,31 +232,185 @@ const CitizenDashboard = () => {
               {activeTab === 'notifications' && (
                 <div className="space-y-4">
                   {data.alerts.length === 0 ? (
-                    <EmptyState icon={Shield} message="No alerts in your area." subMessage="You are safe." />
+                    <EmptyState icon={Shield} message="No active alerts." subMessage="All clear in your area." />
                   ) : (
-                    data.alerts.map((alert) => (
-                      <motion.div
-                        key={alert.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="relative group"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                        <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 border-l-4 !border-l-red-500 rounded-2xl p-6 hover:border-white/20 transition-all duration-300">
-                          <div className="flex items-center gap-3 mb-4">
-                            <span className="bg-red-500/20 text-red-300 text-[10px] font-bold px-3 py-1.5 rounded-full border border-red-500/30 uppercase tracking-wider animate-pulse">
-                              Emergency Alert
-                            </span>
-                            <span className="text-slate-500 text-xs flex items-center gap-1 font-mono">
-                              <Clock size={12} /> {new Date(alert.broadcastTime).toLocaleTimeString()}
-                            </span>
+                    data.alerts.map((alert) => {
+                      const alertDate = new Date(alert.broadcastTime);
+                      const severity = alert.severity || 'HIGH';
+
+                      return (
+                        <motion.div
+                          key={alert.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className={`relative group ${severity === 'CRITICAL' ? 'animate-heartbeat' : ''}`}
+                        >
+                          <div className={`absolute inset-0 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 ${severity === 'CRITICAL'
+                            ? 'bg-gradient-to-br from-danger-500/20 to-transparent'
+                            : 'bg-gradient-to-br from-accent-500/10 to-transparent'
+                            }`} />
+                          <div className={`relative glass-lifeline p-6 rounded-2xl hover:border-white/20 transition-all duration-300 ${severity === 'CRITICAL' ? 'border-danger-500/50 shadow-glow-md' : ''
+                            }`}>
+                            {/* Header with Severity and Time */}
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${severity === 'CRITICAL'
+                                  ? 'bg-danger-500/20 text-danger-300 border-danger-500/50 animate-pulse-fast'
+                                  : severity === 'HIGH'
+                                    ? 'bg-accent-500/20 text-accent-300 border-accent-500/50'
+                                    : 'bg-warning-500/20 text-warning-300 border-warning-500/50'
+                                  }`}>
+                                  {severity} Alert
+                                </span>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-sm font-bold text-white font-mono">
+                                  {alertDate.toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                                <div className="text-xs text-secondary-400 font-mono flex items-center gap-1 justify-end">
+                                  <Clock size={12} />
+                                  {alertDate.toLocaleTimeString('en-IN', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Alert Content */}
+                            <h3 className="text-2xl font-bold text-white mb-3">{alert.title}</h3>
+                            <p className="text-slate-300 leading-relaxed mb-4">{alert.message}</p>
+
+                            {/* Footer - Location Info */}
+                            {(alert.district || alert.affectedAreas) && (
+                              <div className="pt-4 border-t border-white/10">
+                                <div className="flex items-center gap-2 text-sm text-slate-400">
+                                  <MapPin size={14} className="text-accent-400" />
+                                  <span>
+                                    {alert.district ? `${alert.district} District` : ''}
+                                    {alert.affectedAreas && alert.affectedAreas.length > 0
+                                      ? ` • ${alert.affectedAreas.length} area(s) affected`
+                                      : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <h3 className="text-xl font-bold text-white mb-2">{alert.title}</h3>
-                          <p className="text-slate-300 leading-relaxed text-sm">{alert.message}</p>
-                        </div>
-                      </motion.div>
-                    ))
+                        </motion.div>
+                      );
+                    })
                   )}
+                </div>
+              )}
+
+              {/* REQUEST RESCUE TAB */}
+              {activeTab === 'rescue' && (
+                <RequestRescue user={user} />
+              )}
+
+              {/* MY REQUESTS TAB */}
+              {activeTab === 'my-requests' && (
+                <MyRescueRequests />
+              )}
+
+              {/* VOLUNTEER TAB */}
+              {activeTab === 'volunteer' && (
+                <div className="max-w-2xl mx-auto">
+                  <div className="glass-lifeline p-8 rounded-2xl">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-glow-md">
+                        <Shield size={32} className="text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-bold text-white mb-1">Volunteer Program</h2>
+                        <p className="text-slate-400">Help your community in times of emergency</p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleVolunteerUpdate} className="space-y-6">
+                      {/* Volunteer Toggle */}
+                      <div className="bg-slate-800/30 p-6 rounded-xl border border-white/10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-bold text-white mb-1">Volunteer Status</h3>
+                            <p className="text-sm text-slate-400">
+                              {volunteerData.isVolunteer
+                                ? '✅ You are currently registered as a volunteer'
+                                : '❌ Not registered as volunteer'}
+                            </p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={volunteerData.isVolunteer}
+                              onChange={(e) => setVolunteerData({ ...volunteerData, isVolunteer: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-16 h-8 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary-500/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-secondary-500"></div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {volunteerData.isVolunteer && (
+                        <>
+                          {/* Skills Input */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-300 mb-2">
+                              Skills & Expertise
+                            </label>
+                            <textarea
+                              value={volunteerData.volunteerSkills}
+                              onChange={(e) => setVolunteerData({ ...volunteerData, volunteerSkills: e.target.value })}
+                              placeholder="e.g., First Aid, Rescue Operations, Medical Training, Search and Rescue, Firefighting, etc."
+                              className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-4 text-white placeholder:text-slate-600 focus:border-secondary-500 focus:ring-2 focus:ring-secondary-500/20 outline-none transition-all h-24"
+                            />
+                            <p className="mt-2 text-xs text-slate-500">Separate multiple skills with commas</p>
+                          </div>
+
+                          {/* Availability Input */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-300 mb-2">
+                              Availability
+                            </label>
+                            <select
+                              value={volunteerData.volunteerAvailability}
+                              onChange={(e) => setVolunteerData({ ...volunteerData, volunteerAvailability: e.target.value })}
+                              className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-4 text-white focus:border-secondary-500 focus:ring-2 focus:ring-secondary-500/20 outline-none transition-all"
+                            >
+                              <option value="">Select availability</option>
+                              <option value="Anytime">Anytime (24/7)</option>
+                              <option value="Weekdays">Weekdays Only</option>
+                              <option value="Weekends">Weekends Only</option>
+                              <option value="Mornings">Mornings</option>
+                              <option value="Evenings">Evenings</option>
+                              <option value="Emergency">Emergency Calls Only</option>
+                            </select>
+                          </div>
+
+                          {/* Info Box */}
+                          <div className="bg-secondary-500/10 border border-secondary-500/30 rounded-xl p-4">
+                            <p className="text-sm text-secondary-300">
+                              <strong>Note:</strong> As a registered volunteer, you'll be notified by officers in your district ({user?.district}) when help is needed during emergencies.
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Submit Button */}
+                      <button
+                        type="submit"
+                        className="w-full py-4 bg-gradient-to-r from-secondary-500 to-secondary-600 text-white rounded-xl font-bold shadow-lg shadow-secondary-900/50 hover:shadow-secondary-900/70 hover:scale-[1.02] transition-all duration-300"
+                      >
+                        {volunteerData.isVolunteer ? 'Update Volunteer Profile' : 'Save Changes'}
+                      </button>
+                    </form>
+                  </div>
                 </div>
               )}
 
@@ -307,8 +499,10 @@ const CitizenDashboard = () => {
                               <Phone size={16} />
                               Call
                             </button>
-                            <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-purple-900/50 hover:shadow-purple-900/70 hover:scale-105 transition-all duration-300">
-                              <Navigation size={16} />
+                            <button className="relative flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-primary-900/50 hover:shadow-primary-900/70 hover:scale-105 transition-all duration-300">
+                              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-bold text-white shadow-glow-sm animate-pulse-fast">
+                                <Navigation size={16} />
+                              </span>
                               Directions
                             </button>
                           </div>

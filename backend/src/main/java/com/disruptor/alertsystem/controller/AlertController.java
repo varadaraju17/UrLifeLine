@@ -165,4 +165,45 @@ public class AlertController {
 
         return ResponseEntity.ok(alerts);
     }
+
+    // Delete alert - Officer can delete their own alerts
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('OFFICER') or hasRole('ADMIN')")
+    public ResponseEntity<?> deleteAlert(@PathVariable Long id, Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User currentUser = userRepository.findById(userDetails.getId()).orElse(null);
+
+        if (currentUser == null) {
+            return ResponseEntity.badRequest().body(new MessageResponse("User not found"));
+        }
+
+        Alert alert = alertRepository.findById(id).orElse(null);
+        if (alert == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Check if user is the creator or an admin
+        if (!alert.getCreatedBy().getId().equals(currentUser.getId()) &&
+                currentUser.getRole() != ERole.ROLE_ADMIN) {
+            return ResponseEntity.status(403).body(new MessageResponse("You can only delete your own alerts"));
+        }
+
+        alertRepository.delete(alert);
+        return ResponseEntity.ok(new MessageResponse("Alert deleted successfully"));
+    }
+
+    // Get officer's sent alerts history
+    @GetMapping("/my-alerts")
+    @PreAuthorize("hasRole('OFFICER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getMyAlerts(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User currentUser = userRepository.findById(userDetails.getId()).orElse(null);
+
+        if (currentUser == null) {
+            return ResponseEntity.badRequest().body(new MessageResponse("User not found"));
+        }
+
+        List<Alert> myAlerts = alertRepository.findByCreatedByOrderByBroadcastTimeDesc(currentUser);
+        return ResponseEntity.ok(myAlerts);
+    }
 }
