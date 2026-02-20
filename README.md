@@ -7,8 +7,11 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-green?style=for-the-badge&logo=spring)
 ![React](https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react)
 ![License](https://img.shields.io/badge/license-MIT-yellow?style=for-the-badge)
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-ur--life--line.vercel.app-blueviolet?style=for-the-badge)](https://ur-life-line-4at1.vercel.app/)
 
 **A full-stack emergency response platform for coordinating disaster relief across India — built for Admins, Field Officers, and Citizens.**
+
+> 🌐 **Live Frontend**: [https://ur-life-line-4at1.vercel.app/](https://ur-life-line-4at1.vercel.app/)
 
 </div>
 
